@@ -43,7 +43,6 @@ public:
         display.setTextSize(4);
         display.setTextColor(WHITE);
         display.setCursor(25, 25);
-        // Display static text
         display.println(output);
         display.display(); 
     }

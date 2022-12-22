@@ -117,11 +117,11 @@ public:
         lcd.clear();
 
         /* prints static output text */
-        lcd.setCursor(0, PowerOutputRow); // set 1-st colum & 2-nd row, 1-st colum & row started at zero
+        lcd.setCursor(0, PowerOutputRow);
         lcd.print(PowerOutputLabel);
 
         /* prints static position text */
-        lcd.setCursor(0, PositionOutputRow); // set 1-st colum & 2-nd row, 1-st colum & row started at zero
+        lcd.setCursor(0, PositionOutputRow);
         lcd.print(PositionOutputLabel);
     }
 
