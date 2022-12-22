@@ -1,6 +1,0 @@
-#ifndef OUTPUT_TRANSLATOR_H
-#define OUTPUT_TRANSLATOR_H
-
-
-
-#endif
