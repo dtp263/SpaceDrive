@@ -1,6 +1,7 @@
-#ifndef SCREEN_WRITER_H
-#define SCREEN_WRITER_H
+#ifndef LCD_SCREEN_WRITER_H
+#define LCD_SCREEN_WRITER_H
 
+#include <Multiplexer.h>
 #include <Arduino.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
@@ -22,7 +23,7 @@ const int PositionOutputRow = 2;
 const char PositionOutputLabel[] = "Pos: ";
 const char PositionOutputSeparator[] = "/";
 
-class ScreenWriter
+class LCDScreenWriter
 {
 private:
     int OutputLabelSize;
@@ -30,44 +31,8 @@ private:
 
     int PositionLabelSize;
     int PositionSeparatorSize;
-public:
-    int CurrentPowerLeft = -100;
-    int CurrentPowerRight = -100;
 
-    int CurrentPositionX = 512;
-    int CurrentPositionY = 512;
-
-    void Setup()
-    {
-        OutputLabelSize = sizeof(PowerOutputLabel);
-        OutputSeparatorSize = sizeof(sizeof(PowerOutputSeparator));
-        PositionLabelSize = sizeof(PositionOutputLabel);
-        PositionSeparatorSize = sizeof(sizeof(PositionOutputSeparator));
-        while (lcd.begin(COLUMS, ROWS) != 1) // colums - 20, rows - 4
-        {
-            Serial.println(F("PCF8574 is not connected or lcd pins declaration is wrong. Only pins numbers: 4,5,6,16,11,12,13,14 are legal."));
-            delay(5000);
-        }
-
-        lcd.print(F("PCF8574 is OK...")); //(F()) saves string to flash & keeps dynamic memory free
-        delay(2000);
-
-        lcd.clear();
-
-        /* prints static output text */
-        lcd.setCursor(0, PowerOutputRow); // set 1-st colum & 2-nd row, 1-st colum & row started at zero
-        lcd.print(PowerOutputLabel);
-
-        /* prints static position text */
-        lcd.setCursor(0, PositionOutputRow); // set 1-st colum & 2-nd row, 1-st colum & row started at zero
-        lcd.print(PositionOutputLabel);
-    }
-
-    void Update()
-    {
-        this->PrintOutputLine();
-        this->PrintPositionLine();
-    }
+    int I2CBusIndex;
 
     void PrintOutputLine()
     {
@@ -119,6 +84,52 @@ public:
         lcd.print(emptyEntry);
         lcd.setCursor(rightStart, PositionOutputRow);
         lcd.print(this->CurrentPositionY);
+    }
+    
+public:
+    int CurrentPowerLeft = -100;
+    int CurrentPowerRight = -100;
+
+    int CurrentPositionX = 512;
+    int CurrentPositionY = 512;
+
+    LCDScreenWriter(int i2cBusIndex)
+    {
+        I2CBusIndex = i2cBusIndex;
+    }
+
+    void Setup()
+    {
+        setTCA9548ABus(I2CBusIndex);
+        OutputLabelSize = sizeof(PowerOutputLabel);
+        OutputSeparatorSize = sizeof(sizeof(PowerOutputSeparator));
+        PositionLabelSize = sizeof(PositionOutputLabel);
+        PositionSeparatorSize = sizeof(sizeof(PositionOutputSeparator));
+        while (lcd.begin(COLUMS, ROWS) != 1) // colums - 20, rows - 4
+        {
+            Serial.println(F("PCF8574 is not connected or lcd pins declaration is wrong. Only pins numbers: 4,5,6,16,11,12,13,14 are legal."));
+            delay(5000);
+        }
+
+        lcd.print(F("PCF8574 is OK...")); //(F()) saves string to flash & keeps dynamic memory free
+        delay(2000);
+
+        lcd.clear();
+
+        /* prints static output text */
+        lcd.setCursor(0, PowerOutputRow);
+        lcd.print(PowerOutputLabel);
+
+        /* prints static position text */
+        lcd.setCursor(0, PositionOutputRow);
+        lcd.print(PositionOutputLabel);
+    }
+
+    void Update()
+    {
+        setTCA9548ABus(I2CBusIndex);
+        this->PrintOutputLine();
+        this->PrintPositionLine();
     }
 };
 
