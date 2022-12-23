@@ -16,7 +16,6 @@ private:
     int I2CBusIndex;
     
 public:
-    // char output[];
 
     SSD1306ScreenWriter(int i2cBusIndex)
     {

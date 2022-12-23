@@ -22,7 +22,6 @@ SSD1306ScreenWriter oledScreen1 = SSD1306ScreenWriter(1);
 
 void setup()
 {
-
   Serial.begin(115200);
 
   // Start I2C communication with the Multiplexer
