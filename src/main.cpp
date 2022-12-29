@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <DigiPot.h>
 #include <LCDScreenWriter.h>
 #include <JoystickReader.h>
 #include <Multiplexer.h>
@@ -8,8 +7,6 @@
 #include <SSD1306ScreenWriter.h>
 #include <Wire.h>
 #include <Adafruit_SSD1306.h>
-
-DigiPot digiPot = DigiPot(7);
 
 SSD1306ScreenWriter oledScreen1 = SSD1306ScreenWriter(2);
 SSD1306ScreenWriter oledScreen2 = SSD1306ScreenWriter(1);
@@ -31,7 +28,6 @@ void setup()
   // Start I2C communication with the Multiplexer
   Wire.begin();
 
-  digiPot.Setup();
   oledScreen1.Setup();
   oledScreen2.Setup();
   oledScreen1.Update("000");
@@ -67,11 +63,6 @@ void loop()
 
   lcdScreenWriter.Update();
 
-  digiPot.WriteResistanceValue(0, lcdScreenWriter.CurrentPowerLeft);
-  digiPot.WriteResistanceValue(1, lcdScreenWriter.CurrentPowerLeft);
-  digiPot.WriteResistanceValue(2, lcdScreenWriter.CurrentPowerLeft);
-  digiPot.WriteResistanceValue(3, lcdScreenWriter.CurrentPowerLeft);
-
-  // Serial.println("finished loop... waiting...");
-  // delay(3000);
+  Serial.println("finished loop... waiting...");
+  delay(3000);
 }
