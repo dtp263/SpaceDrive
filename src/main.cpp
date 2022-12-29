@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <DigiPot.h>
 #include <LCDScreenWriter.h>
 #include <JoystickReader.h>
 #include <Multiplexer.h>
@@ -8,13 +9,16 @@
 #include <Wire.h>
 #include <Adafruit_SSD1306.h>
 
+DigiPot digiPot = DigiPot(7);
+
+SSD1306ScreenWriter oledScreen1 = SSD1306ScreenWriter(2);
+SSD1306ScreenWriter oledScreen2 = SSD1306ScreenWriter(1);
 LCDScreenWriter lcdScreenWriter = LCDScreenWriter(0);
-JoystickReader joystickReader = JoystickReader();
-OutputConverter outputConverter = OutputConverter();
 
 JoystickPosition currentJoystickPosition = JoystickPosition{};
+JoystickReader joystickReader = JoystickReader();
 
-SSD1306ScreenWriter oledScreen1 = SSD1306ScreenWriter(1);
+OutputConverter outputConverter = OutputConverter();
 
 
 #define SCREEN_WIDTH 128
@@ -22,15 +26,23 @@ SSD1306ScreenWriter oledScreen1 = SSD1306ScreenWriter(1);
 
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(9600);
 
   // Start I2C communication with the Multiplexer
   Wire.begin();
 
+  digiPot.Setup();
   oledScreen1.Setup();
-  oledScreen1.Update("102");
+  oledScreen2.Setup();
+  oledScreen1.Update("000");
+  oledScreen2.Update("000");
 
   lcdScreenWriter.Setup();
+}
+
+int convertToScale(int inputScale, int outputScale, int value) {
+  float conversion = float(value) / float(inputScale);
+  return conversion * outputScale;
 }
 
 void loop()
@@ -43,10 +55,23 @@ void loop()
 
   outputConverter.ConvertToDualMotorOutput(currentJoystickPosition);
 
-  lcdScreenWriter.CurrentPowerLeft = currentJoystickPosition.X / float(1024) * 100;
-  lcdScreenWriter.CurrentPowerRight = currentJoystickPosition.Y / float(1024) * 100;
+  lcdScreenWriter.CurrentPowerLeft = convertToScale(1024, 100, currentJoystickPosition.X);
+  lcdScreenWriter.CurrentPowerRight = convertToScale(1024, 100, currentJoystickPosition.Y);
+
+  char buffer[16];
+  itoa(convertToScale(1024, 256, currentJoystickPosition.X), buffer, 10);
+  oledScreen1.Update(buffer);
+
+  itoa(convertToScale(1024, 256, currentJoystickPosition.Y), buffer, 10);
+  oledScreen2.Update(buffer);
 
   lcdScreenWriter.Update();
 
-  delay(1000);
+  digiPot.WriteResistanceValue(0, lcdScreenWriter.CurrentPowerLeft);
+  digiPot.WriteResistanceValue(1, lcdScreenWriter.CurrentPowerLeft);
+  digiPot.WriteResistanceValue(2, lcdScreenWriter.CurrentPowerLeft);
+  digiPot.WriteResistanceValue(3, lcdScreenWriter.CurrentPowerLeft);
+
+  // Serial.println("finished loop... waiting...");
+  // delay(3000);
 }
