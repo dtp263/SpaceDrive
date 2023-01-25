@@ -14,6 +14,7 @@ class SSD1306ScreenWriter
 {
 private:
     int I2CBusIndex;
+    char buffer[16];
     
 public:
 
@@ -44,6 +45,18 @@ public:
         display.setCursor(25, 25);
         display.println(output);
         display.display(); 
+    }
+
+    void WriteFloat(float value)
+    {
+        dtostrf(value, 3, 2, buffer);
+        Update(buffer);
+    }
+
+    void WriteInt(int value)
+    {
+        itoa(value, buffer, 10);
+        Update(buffer);
     }
 };
 

@@ -3,14 +3,15 @@
 
 #include <JoystickReader.h>
 #include <Arduino.h>
+#include <Utils.h>
 
 struct DualMotorOutputValue {
-    int Left;
-    int Right;
+    int LeftPowerPercentage;
+    int RightPowerPercentage;
 };
 
 
-class OutputConverter
+class OutputConverter 
 {
 private:
   
@@ -21,10 +22,10 @@ public:
         
     }
 
-    DualMotorOutputValue ConvertToDualMotorOutput(JoystickPosition joystickPosition) {
+    DualMotorOutputValue ConvertToDualMotorOutput(RelativeJoystickPosition joystickPosition) {
         return DualMotorOutputValue{
-            Left: 100,
-            Right: 100,
+            LeftPowerPercentage: ConvertToScale(1024, 100, joystickPosition.X),
+            RightPowerPercentage: ConvertToScale(1024, 100, joystickPosition.Y),
         };
     }
 };

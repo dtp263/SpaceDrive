@@ -2,12 +2,8 @@
 #define JOYSTICK_READER_H
 
 #include <Arduino.h>
+#include <JoystickPosition.h>
 
-
-struct JoystickPosition{
-   int X;
-   int Y;
-};
 
 class JoystickReader
 {
@@ -29,7 +25,7 @@ public:
         
     }
 
-    JoystickPosition ReadPosition() {
+    AbsoluteJoystickPosition ReadAbsolutePosition() {
         int xPosition = analogRead(potPinX);
         int yPosition = analogRead(potPinY);
         if (invertX == true) {
@@ -38,11 +34,12 @@ public:
         if (invertY == true) {
             yPosition = InvertPosition(yPosition);
         }
-        return JoystickPosition{
-            X: xPosition,
-            Y: yPosition,
-        };
+        return AbsoluteJoystickPosition(xPosition, yPosition, 1024);
+    }
 
+    RelativeJoystickPosition ReadRelativePosition() {
+        AbsoluteJoystickPosition absolutePosition = ReadAbsolutePosition();
+        return absolutePosition.ToRelativePositionFromCenter();
     }
 };
 
