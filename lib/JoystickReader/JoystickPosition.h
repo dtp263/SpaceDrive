@@ -21,11 +21,13 @@ class RelativeJoystickPosition
 };
 
 class AbsoluteJoystickPosition
-{
+{   
+    private:
+        unsigned int Scale;
+
     public:
         unsigned int X;
         unsigned int Y;
-        unsigned int Scale;
 
         AbsoluteJoystickPosition(unsigned int x, unsigned int y, unsigned int scale) {
             X = x;
@@ -38,7 +40,6 @@ class AbsoluteJoystickPosition
             int relativeLeft = int(X) - newScale;
             int relativeRight = int(Y) - newScale;
             return RelativeJoystickPosition(relativeLeft, relativeRight, newScale);
-
         }
 };
 

@@ -1,20 +1,26 @@
 #ifndef DUAL_MOTOR_CONTROLLER_H
 #define DUAL_MOTOR_CONTROLLER_H
 
-#define START_THROTTLE_VOLTAGE .871
-#define END_THROTTLE_VOLTAGE 3.99
+// #define START_THROTTLE_VOLTAGE .871
+#define START_THROTTLE_VOLTAGE 1.2
+// #define END_THROTTLE_VOLTAGE 3.99
+#define END_THROTTLE_VOLTAGE 3.2
 
-#include <OutputConverter.h>
 #include <MCP4275.h>
 #include <Utils.h>
 
-float convertToVoltageRange(float startVoltage, float endVoltage, int percentage) {
-  float voltagePerPercentagePoint = (endVoltage - startVoltage) / 100;
-  return (voltagePerPercentagePoint * percentage) + startVoltage;
+float convertToVoltageRange(float startVoltage, float endVoltage, int inputValue, int inputScale) {
+  float voltsPerInputScaleStep = (endVoltage - startVoltage) / inputScale;
+  return (voltsPerInputScaleStep * float(inputValue)) + startVoltage;
 }
 
 int voltageToArduinoAnalogValue(float voltage) {
     return (voltage / float(5)) * 255;
+}
+
+uint16_t voltageToDACRange(float voltage) {
+    float voltsPerStep = 5.0 / 4096.0;
+    return uint16_t(voltage / voltsPerStep);
 }
 
 uint16_t convertTo12BitRange(int value, int inputScale) {
@@ -63,11 +69,14 @@ class DualMotorController {
         }
 
         void WritePowerToMotor(int leftPower, int rightPower, int scale) {
-            leftMotorVoltage = convertToVoltageRange(START_THROTTLE_VOLTAGE, END_THROTTLE_VOLTAGE, leftPower);
-            rightMotorVoltage = convertToVoltageRange(START_THROTTLE_VOLTAGE, END_THROTTLE_VOLTAGE, rightPower);
+            leftMotorVoltage = convertToVoltageRange(START_THROTTLE_VOLTAGE, END_THROTTLE_VOLTAGE, leftPower, scale);
+            rightMotorVoltage = convertToVoltageRange(START_THROTTLE_VOLTAGE, END_THROTTLE_VOLTAGE, rightPower, scale);
 
-            leftArduinoOutputValue = convertTo12BitRange(leftPower, scale);
-            rightArduinoOutputValue = convertTo12BitRange(rightPower, scale);
+            // leftArduinoOutputValue = convertTo12BitRange(leftPower, scale);
+            // rightArduinoOutputValue = convertTo12BitRange(rightPower, scale);
+
+            leftArduinoOutputValue = voltageToDACRange(leftMotorVoltage);
+            rightArduinoOutputValue = voltageToDACRange(rightMotorVoltage);
 
             leftMotorWriter.SetVoltage(leftArduinoOutputValue);
             rightMotorWriter.SetVoltage(rightArduinoOutputValue);

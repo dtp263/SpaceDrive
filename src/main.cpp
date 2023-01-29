@@ -2,7 +2,7 @@
 #include <LCDScreenWriter.h>
 #include <JoystickReader.h>
 #include <Multiplexer.h>
-#include <OutputConverter.h>
+#include <OutputDifferential.h>
 #include <DualMotorController.h>
 #include <SPI.h>
 #include <SSD1306ScreenWriter.h>
@@ -26,7 +26,7 @@ RelativeJoystickPosition currentJoystickPosition = RelativeJoystickPosition(0, 0
 JoystickReader joystickReader = JoystickReader();
 
 DualMotorController motorController = DualMotorController(5, 6);
-OutputConverter outputConverter = OutputConverter();
+OutputDifferential outputConverter = OutputDifferential();
 
 DualMotorOutputValue motorOutputValue = DualMotorOutputValue{
   LeftPowerPercentage: 0,
@@ -52,7 +52,6 @@ void setup()
 
 void loop()
 {
-  // setTCA9548ABus(0);
   currentJoystickPosition = joystickReader.ReadRelativePosition();
 
   motorOutputValue = outputConverter.ConvertToDualMotorOutput(currentJoystickPosition);
@@ -60,7 +59,6 @@ void loop()
   motorController.WritePowerToMotorAsPercentage(motorOutputValue);
 
   // Do display work.
-
   lcdScreenWriter.CurrentPositionX = currentJoystickPosition.X;
   lcdScreenWriter.CurrentPositionY = currentJoystickPosition.Y;
 
