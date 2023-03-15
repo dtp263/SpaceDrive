@@ -1,79 +1,40 @@
 #include <Arduino.h>
-#include <LCDScreenWriter.h>
-#include <JoystickReader.h>
-#include <Multiplexer.h>
-#include <OutputDifferential.h>
-#include <DualMotorController.h>
-#include <SPI.h>
-#include <SSD1306ScreenWriter.h>
 #include <Wire.h>
-#include <Adafruit_SSD1306.h>
-#include <Utils.h>
+#include <SPI.h>
+/*
+  Blink
 
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
+  Turns an LED on for one second, then off for one second, repeatedly.
 
-#define JOYSTICK_POSITION_COUNT 1024
+  Most Arduinos have an on-board LED you can control. On the UNO, MEGA and ZERO
+  it is attached to digital pin 13, on MKR1000 on pin 6. LED_BUILTIN is set to
+  the correct LED pin independent of which board is used.
+  If you want to know what pin the on-board LED is connected to on your Arduino
+  model, check the Technical Specs of your board at:
+  https://www.arduino.cc/en/Main/Products
 
-SSD1306ScreenWriter oledScreenLeft = SSD1306ScreenWriter(2);
-SSD1306ScreenWriter oledScreenRight = SSD1306ScreenWriter(1);
-SSD1306ScreenWriter oledScreenLeftBottom = SSD1306ScreenWriter(3);
-SSD1306ScreenWriter oledScreenRightBottom = SSD1306ScreenWriter(4);
+  modified 8 May 2014
+  by Scott Fitzgerald
+  modified 2 Sep 2016
+  by Arturo Guadalupi
+  modified 8 Sep 2016
+  by Colby Newman
 
-LCDScreenWriter lcdScreenWriter = LCDScreenWriter(0);
+  This example code is in the public domain.
 
-RelativeJoystickPosition currentJoystickPosition = RelativeJoystickPosition(0, 0, JOYSTICK_POSITION_COUNT);
-JoystickReader joystickReader = JoystickReader();
+  https://www.arduino.cc/en/Tutorial/BuiltInExamples/Blink
+*/
 
-DualMotorController motorController = DualMotorController(5, 6);
-OutputDifferential outputConverter = OutputDifferential();
-
-DualMotorOutputValue motorOutputValue = DualMotorOutputValue{
-  LeftPowerPercentage: 0,
-  RightPowerPercentage: 0
-};
-
-void setup()
-{
-  Serial.begin(9600);
-
-  // Start I2C communication with the Multiplexer
-  Wire.begin();
-
-  motorController.Setup();
-
-  oledScreenLeft.Setup();
-  oledScreenRight.Setup();
-  oledScreenLeftBottom.Setup();
-  oledScreenRightBottom.Setup();
-
-  lcdScreenWriter.Setup();
+// the setup function runs once when you press reset or power the board
+void setup() {
+  // initialize digital pin LED_BUILTIN as an output.
+  pinMode(LED_BUILTIN, OUTPUT);
 }
 
-void loop()
-{
-  currentJoystickPosition = joystickReader.ReadRelativePosition();
-
-  motorOutputValue = outputConverter.ConvertToDualMotorOutput(currentJoystickPosition);
-
-  motorController.WritePowerToMotorAsPercentage(motorOutputValue);
-
-  // Do display work.
-  lcdScreenWriter.CurrentPositionX = currentJoystickPosition.X;
-  lcdScreenWriter.CurrentPositionY = currentJoystickPosition.Y;
-
-  lcdScreenWriter.CurrentPowerLeft = motorOutputValue.LeftPowerPercentage;
-  lcdScreenWriter.CurrentPowerRight = motorOutputValue.RightPowerPercentage;
-  lcdScreenWriter.Update();
-
-  MotorVoltages voltages = motorController.GetMotorVoltages();
-  oledScreenLeft.WriteFloat(voltages.Left);
-  oledScreenRight.WriteFloat(voltages.Right);
-
-  MotorAnalogOutput analogOutputs = motorController.GetAnalogOutputs();
-  oledScreenLeftBottom.WriteInt(analogOutputs.Left);
-  oledScreenRightBottom.WriteInt(analogOutputs.Right);
-
-  Serial.println("finished loop... waiting...");
-  // delay(3000);
+// the loop function runs over and over again forever
+void loop() {
+  digitalWrite(LED_BUILTIN, HIGH);  // turn the LED on (HIGH is the voltage level)
+  delay(100);                      // wait for a second
+  digitalWrite(LED_BUILTIN, LOW);   // turn the LED off by making the voltage LOW
+  delay(100);                      // wait for a second
 }
