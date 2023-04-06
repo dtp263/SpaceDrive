@@ -4,6 +4,7 @@
 #include <Multiplexer.h>
 #include <OutputDifferential.h>
 #include <DualMotorController.h>
+#include <DrivePacket.h>
 #include <SPI.h>
 #include <SSD1306ScreenWriter.h>
 #include <Wire.h>
@@ -25,7 +26,6 @@ LCDScreenWriter lcdScreenWriter = LCDScreenWriter(0);
 RelativeJoystickPosition currentJoystickPosition = RelativeJoystickPosition(0, 0, JOYSTICK_POSITION_COUNT);
 JoystickReader joystickReader = JoystickReader();
 
-DualMotorController motorController = DualMotorController(5, 6);
 OutputDifferential outputConverter = OutputDifferential();
 
 DualMotorOutputValue motorOutputValue = DualMotorOutputValue{
@@ -33,14 +33,23 @@ DualMotorOutputValue motorOutputValue = DualMotorOutputValue{
   RightPowerPercentage: 0
 };
 
+DrivePacket drivePacket;
+DrivePacket *testDrivePacket;
+
+
+char* drivePacketBuffer = (char*)malloc(DRIVE_PACKET_SIZE);
+
+String packetBuffer;
+
 void setup()
 {
   Serial.begin(9600);
+  Serial1.begin(9600);
 
   // Start I2C communication with the Multiplexer
   Wire.begin();
 
-  motorController.Setup();
+  // motorController.Setup();
 
   oledScreenLeft.Setup();
   oledScreenRight.Setup();
@@ -56,7 +65,32 @@ void loop()
 
   motorOutputValue = outputConverter.ConvertToDualMotorOutput(currentJoystickPosition);
 
-  motorController.WritePowerToMotorAsPercentage(motorOutputValue);
+  
+  drivePacket.Data.leftMotorPower = motorOutputValue.LeftPowerPercentage;
+  drivePacket.Data.rightMotorPower = motorOutputValue.RightPowerPercentage;
+  packetBuffer = DrivePacket::Serialize(&drivePacket);
+  packetBuffer.toCharArray(drivePacketBuffer, DRIVE_PACKET_SIZE, 0);
+  Serial1.write(drivePacketBuffer, DRIVE_PACKET_SIZE);
+  Serial.println(packetBuffer);
+
+  drivePacket = DrivePacket::Deserialize(packetBuffer);
+
+  Serial.print(drivePacket.Data.leftMotorPower);
+  Serial.print("  ");
+  Serial.print(drivePacket.Data.rightMotorPower);
+  Serial.print("\n");
+
+  
+
+  // if (motorOutputValue.LeftPowerPercentage > 20) {
+  //   Serial1.write('1');
+  // } else if (motorOutputValue.LeftPowerPercentage < 20)
+  // {
+  //   Serial1.write('0');
+  // }
+  
+
+  // motorController.WritePowerToMotorAsPercentage(motorOutputValue.LeftPowerPercentage, motorOutputValue.RightPowerPercentage);
 
   // Do display work.
   lcdScreenWriter.CurrentPositionX = currentJoystickPosition.X;
@@ -66,14 +100,14 @@ void loop()
   lcdScreenWriter.CurrentPowerRight = motorOutputValue.RightPowerPercentage;
   lcdScreenWriter.Update();
 
-  MotorVoltages voltages = motorController.GetMotorVoltages();
-  oledScreenLeft.WriteFloat(voltages.Left);
-  oledScreenRight.WriteFloat(voltages.Right);
+  // MotorVoltages voltages = motorController.GetMotorVoltages();
+  // oledScreenLeft.WriteFloat(voltages.Left);
+  // oledScreenRight.WriteFloat(voltages.Right);
 
-  MotorAnalogOutput analogOutputs = motorController.GetAnalogOutputs();
-  oledScreenLeftBottom.WriteInt(analogOutputs.Left);
-  oledScreenRightBottom.WriteInt(analogOutputs.Right);
+  // MotorAnalogOutput analogOutputs = motorController.GetAnalogOutputs();
+  oledScreenLeftBottom.WriteInt(sizeof(&drivePacketBuffer));
+  oledScreenRightBottom.WriteInt(DRIVE_PACKET_SIZE);
 
-  Serial.println("finished loop... waiting...");
-  // delay(3000);
+  // Serial.println("finished loop... waiting...");
+  delay(1000);
 }
