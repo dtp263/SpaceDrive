@@ -42,25 +42,6 @@ public:
         );
 
         return String(buffer);
-
-
-        // // int *q = (int *)out;
-
-        // // *q = in->Data.leftMotorPower;
-        // // q++;
-        // // *q = in->Data.rightMotorPower;
-        // // q++;
-
-        // StaticJsonDocument<200> doc;
-        // doc["left"] = in->Data.leftMotorPower;
-        // doc["right"] = in->Data.rightMotorPower;
-
-        // serializeJson(doc, out, DRIVE_PACKET_SIZE);
-
-        
-        // // outString.toCharArray(out, DRIVE_PACKET_SIZE);
-
-        // // sprintf(out, "Packet{ Left: %d, Right: %d }", in->Data.leftMotorPower, in->Data.rightMotorPower);
     }
 
     static DrivePacket Deserialize(String in)
@@ -80,33 +61,7 @@ public:
         nextIndex = in.indexOf(delimeter,index);
         tmp.Data.rightMotorPower = in.substring(index, nextIndex).toInt();
 
-        // tmp.Data.leftMotorPower = atoi(strtok(in, delimeter));
-        // // somethingElse = strtod(endptr + 1, &endptr);  // +1 to skip the comma.
-        // tmp.Data.rightMotorPower = atoi(strtok(in, delimeter));
-
         return tmp;
-        // Serial.println(in);
-        // StaticJsonDocument<200> doc;
-        // // Deserialize the JSON document
-        // DeserializationError error = deserializeJson(doc, in);
-
-        // // Test if parsing succeeds.
-        // if (error) {
-        //     Serial.print(F("deserializeJson() failed: "));
-        //     Serial.println(error.f_str());
-        //     return;
-        // }
-
-        // out->Data.leftMotorPower = doc["left"];
-        // out->Data.rightMotorPower = doc["right"];
-
-        // // int *q = (int *)in;
-        // // out->Data.leftMotorPower = *q;
-        // // q++;
-        // // out->Data.rightMotorPower = *q;
-        // // q++;
-
-        
     }
 };
 

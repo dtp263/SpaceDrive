@@ -17,14 +17,14 @@ void test_function_should_serialize_and_deserialize_without_error(void) {
   // more test stuff
   DrivePacket testPacket = DrivePacket(33, 42);
   char *buffer;
-  DrivePacket::Serialize(&testPacket, buffer);
+  String serializedString = DrivePacket::Serialize(&testPacket);
 
   Serial.println(buffer);
-
-  TEST_ASSERT_EQUAL_STRING(buffer, "33|42");
+  serializedString.toCharArray(buffer, DRIVE_PACKET_SIZE);
+  TEST_ASSERT_EQUAL_STRING(buffer, "33,42");
 
   DrivePacket resultPacket;
-  DrivePacket::Deserialize(buffer, &resultPacket);
+  resultPacket = DrivePacket::Deserialize(String(buffer));
   
 
   TEST_ASSERT_EQUAL(testPacket.Data.leftMotorPower, resultPacket.Data.leftMotorPower);
