@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include <LCDScreenWriter.h>
 #include <JoystickReader.h>
-#include <Multiplexer.h>
 #include <OutputDifferential.h>
 #include <DualMotorController.h>
 #include <DrivePacket.h>
@@ -28,6 +27,7 @@ JoystickReader joystickReader = JoystickReader();
 
 OutputDifferential outputConverter = OutputDifferential();
 
+DualMotorController motorController = DualMotorController(5, 6);
 DualMotorOutputValue motorOutputValue = DualMotorOutputValue{
   LeftPowerPercentage: 0,
   RightPowerPercentage: 0
@@ -49,7 +49,7 @@ void setup()
   // Start I2C communication with the Multiplexer
   Wire.begin();
 
-  // motorController.Setup();
+  motorController.Setup();
 
   oledScreenLeft.Setup();
   oledScreenRight.Setup();
@@ -57,6 +57,8 @@ void setup()
   oledScreenRightBottom.Setup();
 
   lcdScreenWriter.Setup();
+  delay(10);
+  digitalWrite(8, HIGH);
 }
 
 void loop()
@@ -75,22 +77,12 @@ void loop()
 
   drivePacket = DrivePacket::Deserialize(packetBuffer);
 
-  Serial.print(drivePacket.Data.leftMotorPower);
-  Serial.print("  ");
-  Serial.print(drivePacket.Data.rightMotorPower);
-  Serial.print("\n");
-
+  // Serial.print(drivePacket.Data.leftMotorPower);
+  // Serial.print("  ");
+  // Serial.print(drivePacket.Data.rightMotorPower);
+  // Serial.print("\n");
   
-
-  // if (motorOutputValue.LeftPowerPercentage > 20) {
-  //   Serial1.write('1');
-  // } else if (motorOutputValue.LeftPowerPercentage < 20)
-  // {
-  //   Serial1.write('0');
-  // }
-  
-
-  // motorController.WritePowerToMotorAsPercentage(motorOutputValue.LeftPowerPercentage, motorOutputValue.RightPowerPercentage);
+  motorController.WritePowerToMotorAsPercentage(motorOutputValue.LeftPowerPercentage, motorOutputValue.RightPowerPercentage);
 
   // Do display work.
   lcdScreenWriter.CurrentPositionX = currentJoystickPosition.X;
@@ -100,14 +92,14 @@ void loop()
   lcdScreenWriter.CurrentPowerRight = motorOutputValue.RightPowerPercentage;
   lcdScreenWriter.Update();
 
-  // MotorVoltages voltages = motorController.GetMotorVoltages();
-  // oledScreenLeft.WriteFloat(voltages.Left);
-  // oledScreenRight.WriteFloat(voltages.Right);
+  MotorVoltages voltages = motorController.GetMotorVoltages();
+  oledScreenLeft.WriteFloat(voltages.Left);
+  oledScreenRight.WriteFloat(voltages.Right);
 
   // MotorAnalogOutput analogOutputs = motorController.GetAnalogOutputs();
-  oledScreenLeftBottom.WriteInt(sizeof(&drivePacketBuffer));
-  oledScreenRightBottom.WriteInt(DRIVE_PACKET_SIZE);
+  oledScreenLeftBottom.WriteInt(drivePacket.Data.leftMotorPower);
+  oledScreenRightBottom.WriteInt(drivePacket.Data.rightMotorPower);
 
   // Serial.println("finished loop... waiting...");
-  delay(1000);
+  // delay(1000);
 }
