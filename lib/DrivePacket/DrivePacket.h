@@ -48,9 +48,6 @@ public:
     {
         DrivePacket tmp;
         char *delimeter = ",";
-        // Serial.print("In: ");
-        // Serial.print(in);
-        // Serial.print("\n");
 
         int index = 0;
         int nextIndex;

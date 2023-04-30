@@ -15,12 +15,13 @@
 
 #define JOYSTICK_POSITION_COUNT 1024
 
-SSD1306ScreenWriter oledScreenLeft = SSD1306ScreenWriter(2);
-SSD1306ScreenWriter oledScreenRight = SSD1306ScreenWriter(1);
-SSD1306ScreenWriter oledScreenLeftBottom = SSD1306ScreenWriter(3);
-SSD1306ScreenWriter oledScreenRightBottom = SSD1306ScreenWriter(4);
+SSD1306ScreenWriter oledScreenLeft = SSD1306ScreenWriter(1);
+SSD1306ScreenWriter oledScreenRight = SSD1306ScreenWriter(0);
+SSD1306ScreenWriter oledScreenLeftBottom = SSD1306ScreenWriter(2);
+SSD1306ScreenWriter oledScreenRightBottom = SSD1306ScreenWriter(3);
 
-LCDScreenWriter lcdScreenWriter = LCDScreenWriter(0);
+LCDScreenWriter lcdScreenWriter = LCDScreenWriter(4);
+
 
 RelativeJoystickPosition currentJoystickPosition = RelativeJoystickPosition(0, 0, JOYSTICK_POSITION_COUNT);
 JoystickReader joystickReader = JoystickReader();
@@ -43,6 +44,7 @@ String packetBuffer;
 
 void setup()
 {
+  Serial.println("begin setup...");
   Serial.begin(9600);
   Serial1.begin(9600);
 
@@ -56,7 +58,7 @@ void setup()
   oledScreenLeftBottom.Setup();
   oledScreenRightBottom.Setup();
 
-  lcdScreenWriter.Setup();
+  // lcdScreenWriter.Setup();
   delay(10);
   digitalWrite(8, HIGH);
 }
@@ -76,11 +78,6 @@ void loop()
   Serial.println(packetBuffer);
 
   drivePacket = DrivePacket::Deserialize(packetBuffer);
-
-  // Serial.print(drivePacket.Data.leftMotorPower);
-  // Serial.print("  ");
-  // Serial.print(drivePacket.Data.rightMotorPower);
-  // Serial.print("\n");
   
   motorController.WritePowerToMotorAsPercentage(motorOutputValue.LeftPowerPercentage, motorOutputValue.RightPowerPercentage);
 
@@ -100,6 +97,6 @@ void loop()
   oledScreenLeftBottom.WriteInt(drivePacket.Data.leftMotorPower);
   oledScreenRightBottom.WriteInt(drivePacket.Data.rightMotorPower);
 
-  // Serial.println("finished loop... waiting...");
+  Serial.println("finished loop... waiting...");
   // delay(1000);
 }
