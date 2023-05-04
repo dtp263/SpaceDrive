@@ -82,8 +82,8 @@ class DualMotorController {
             rightMotorWriter.SetVoltage(rightArduinoOutputValue);
         }
 
-        void WritePowerToMotorAsPercentage(DualMotorOutputValue outputValues) {
-            WritePowerToMotor(outputValues.LeftPowerPercentage, outputValues.RightPowerPercentage, 100);
+        void WritePowerToMotorAsPercentage(int leftPowerPercentage, int rightPowerPercentage) {
+            WritePowerToMotor(leftPowerPercentage, rightPowerPercentage, 100);
         }
 
         MotorVoltages GetMotorVoltages() {
