@@ -13,6 +13,8 @@
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 
+#define RS_485_PIN 8
+
 #define JOYSTICK_POSITION_COUNT 1024
 
 SSD1306ScreenWriter oledScreenLeft = SSD1306ScreenWriter(1);
@@ -60,7 +62,8 @@ void setup()
 
   // lcdScreenWriter.Setup();
   delay(10);
-  digitalWrite(8, HIGH);
+  pinMode(RS_485_PIN, OUTPUT);
+  digitalWrite(RS_485_PIN, HIGH);
 }
 
 void loop()
