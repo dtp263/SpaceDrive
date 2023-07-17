@@ -2,7 +2,7 @@
 #define DUAL_MOTOR_CONTROLLER_H
 
 // #define START_THROTTLE_VOLTAGE .871
-#define START_THROTTLE_VOLTAGE 1.2
+#define START_THROTTLE_VOLTAGE 1.0
 // #define END_THROTTLE_VOLTAGE 3.99
 #define END_THROTTLE_VOLTAGE 3.2
 
@@ -71,9 +71,6 @@ class DualMotorController {
         void WritePowerToMotor(int leftPower, int rightPower, int scale) {
             leftMotorVoltage = convertToVoltageRange(START_THROTTLE_VOLTAGE, END_THROTTLE_VOLTAGE, leftPower, scale);
             rightMotorVoltage = convertToVoltageRange(START_THROTTLE_VOLTAGE, END_THROTTLE_VOLTAGE, rightPower, scale);
-
-            // leftArduinoOutputValue = convertTo12BitRange(leftPower, scale);
-            // rightArduinoOutputValue = convertTo12BitRange(rightPower, scale);
 
             leftArduinoOutputValue = voltageToDACRange(leftMotorVoltage);
             rightArduinoOutputValue = voltageToDACRange(rightMotorVoltage);

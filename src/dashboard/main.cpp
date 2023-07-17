@@ -4,6 +4,7 @@
 #include <OutputDifferential.h>
 #include <DualMotorController.h>
 #include <DrivePacket.h>
+#include <SerialTransfer.h>
 #include <SPI.h>
 #include <SSD1306ScreenWriter.h>
 #include <Wire.h>
@@ -69,14 +70,12 @@ void setup()
 void loop()
 {
   currentJoystickPosition = joystickReader.ReadRelativePosition();
-
   motorOutputValue = outputConverter.ConvertToDualMotorOutput(currentJoystickPosition);
 
-  
   drivePacket.Data.leftMotorPower = motorOutputValue.LeftPowerPercentage;
   drivePacket.Data.rightMotorPower = motorOutputValue.RightPowerPercentage;
   packetBuffer = DrivePacket::Serialize(&drivePacket);
-  packetBuffer.toCharArray(drivePacketBuffer, DRIVE_PACKET_SIZE, 0);
+  packetBuffer.toCharArray(drivePacketBuffer, DRIVE_PACKET_SIZE);
   Serial1.write(drivePacketBuffer, DRIVE_PACKET_SIZE);
   Serial.println(packetBuffer);
 
@@ -101,5 +100,5 @@ void loop()
   oledScreenRightBottom.WriteInt(drivePacket.Data.rightMotorPower);
 
   Serial.println("finished loop... waiting...");
-  // delay(1000);
+  delay(100);
 }

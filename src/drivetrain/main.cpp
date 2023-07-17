@@ -10,6 +10,9 @@
 
 // #define RS_485_PIN 2
 
+#define LEFT_MOTOR_REVERSE_RELAY 6
+#define RIGHT_MOTOR_REVERSE_RELAY 7
+
 DualMotorController motorController = DualMotorController(1, 0);
 
 SSD1306ScreenWriter oledScreenLeft = SSD1306ScreenWriter(7);
@@ -20,7 +23,10 @@ SSD1306ScreenWriter biosScreen = SSD1306ScreenWriter(2);
 int relayPins[8] = {3,4,5,6,9,10,11,12};
 EightChannelRelayBoard relayBoard = EightChannelRelayBoard(relayPins);
 
+bool isChangingDirectionLeft;
+bool isChangingDirectionRight;
 
+DrivePacket previousDrivePacket;
 DrivePacket drivePacket;
 char *drivePacketBuffer = (char*)malloc(DRIVE_PACKET_SIZE);
 
@@ -31,7 +37,7 @@ void setup() {
 
   // Start I2C communication with the Multiplexer
   Wire.begin();
-    
+
   motorController.Setup();
   oledScreenLeft.Setup();
   oledScreenRight.Setup();
@@ -45,26 +51,51 @@ void setup() {
   // pinMode(RS_485_PIN, OUTPUT);
   // digitalWrite(RS_485_PIN, LOW);
 
+  previousDrivePacket.Data.leftMotorPower = 0;
+  previousDrivePacket.Data.rightMotorPower = 0;
+
   relayBoard.Setup();
 }
-
 
 void loop() {
   Serial.println("Begin loop...");
   biosScreen.WriteInt(1);
-  delay(10);
   
   if (Serial2.available()) {
     biosScreen.WriteInt(2);
-    Serial2.setTimeout(2000);
+    Serial2.setTimeout(1000);
     Serial2.readBytes(drivePacketBuffer, DRIVE_PACKET_SIZE);
+    
+    previousDrivePacket = drivePacket;
     drivePacket = DrivePacket::Deserialize(String(drivePacketBuffer));
+
+    Serial.println(String(drivePacketBuffer));
 
     if(drivePacket.Data.leftMotorPower >= 20) digitalWrite(LED_BUILTIN, HIGH);  // switch LED On
     if(drivePacket.Data.leftMotorPower < 20) digitalWrite(LED_BUILTIN, LOW);   // switch LED Off
+    
+    if (drivePacket.Data.leftMotorPower < 0)  {
+      isChangingDirectionLeft = true;
+      relayBoard.SetRelayOn(LEFT_MOTOR_REVERSE_RELAY);
+      drivePacket.Data.leftMotorPower *= -1;
+    } else {
+      isChangingDirectionLeft = false;
+      relayBoard.SetRelayOff(LEFT_MOTOR_REVERSE_RELAY); // switch left reverse switch off
+    }
 
-    if(drivePacket.Data.leftMotorPower >= 20) relayBoard.SetRelayOn(1);  // switch LED On
-    if(drivePacket.Data.leftMotorPower < 20) relayBoard.SetRelayOff(1);   // switch LED Off
+    if(drivePacket.Data.rightMotorPower < 0) {
+      isChangingDirectionRight = true;
+      relayBoard.SetRelayOn(RIGHT_MOTOR_REVERSE_RELAY); // switch right reverse switch on
+      drivePacket.Data.rightMotorPower *= -1;
+    } else {
+      isChangingDirectionRight = false;
+      relayBoard.SetRelayOff(RIGHT_MOTOR_REVERSE_RELAY); // switch right reverse switch off
+    }
+
+    // if (isChangingDirectionRight || isChangingDirectionLeft) {
+    //   motorController.WritePowerToMotorAsPercentage(0,0);
+    //   delay(200);
+    // }
 
     Serial.print(drivePacket.Data.leftMotorPower);
     Serial.print(",");

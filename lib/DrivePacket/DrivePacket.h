@@ -4,7 +4,9 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 
-#define DRIVE_PACKET_SIZE 24
+#define DRIVE_PACKET_SIZE 56
+
+#define DELIMETER ","
 
 struct DrivePacketData
 {
@@ -36,18 +38,20 @@ public:
         
         sprintf(
             buffer,
-            "%d,%d", 
+            "%d%s%d", 
             in->Data.leftMotorPower, 
+            DELIMETER,
             in->Data.rightMotorPower
         );
 
         return String(buffer);
     }
 
+    // deserialize a char pointer into two ints delineated by a comma and return a DrivePacket
     static DrivePacket Deserialize(String in)
     {
         DrivePacket tmp;
-        char *delimeter = ",";
+        char *delimeter = DELIMETER;
 
         int index = 0;
         int nextIndex;
