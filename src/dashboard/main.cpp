@@ -18,6 +18,12 @@
 
 #define JOYSTICK_POSITION_COUNT 1024
 
+SerialTransfer myTransfer;
+
+MyTestStruct testStruct;
+
+DrivePacketData drivePacketData;
+
 SSD1306ScreenWriter oledScreenLeft = SSD1306ScreenWriter(1);
 SSD1306ScreenWriter oledScreenRight = SSD1306ScreenWriter(0);
 SSD1306ScreenWriter oledScreenLeftBottom = SSD1306ScreenWriter(2);
@@ -51,6 +57,15 @@ void setup()
   Serial.begin(9600);
   Serial1.begin(9600);
 
+
+  myTransfer.begin(Serial1);
+
+  testStruct.z = '$';
+  testStruct.y = 4.5;
+
+  drivePacketData.leftMotorPower = 0;
+  drivePacketData.rightMotorPower = 0;
+
   // Start I2C communication with the Multiplexer
   Wire.begin();
 
@@ -72,14 +87,34 @@ void loop()
   currentJoystickPosition = joystickReader.ReadRelativePosition();
   motorOutputValue = outputConverter.ConvertToDualMotorOutput(currentJoystickPosition);
 
+  // Do serial work.
   drivePacket.Data.leftMotorPower = motorOutputValue.LeftPowerPercentage;
   drivePacket.Data.rightMotorPower = motorOutputValue.RightPowerPercentage;
   packetBuffer = DrivePacket::Serialize(&drivePacket);
   packetBuffer.toCharArray(drivePacketBuffer, DRIVE_PACKET_SIZE);
-  Serial1.write(drivePacketBuffer, DRIVE_PACKET_SIZE);
+  // Serial1.write(drivePacketBuffer, DRIVE_PACKET_SIZE);
   Serial.println(packetBuffer);
 
-  drivePacket = DrivePacket::Deserialize(packetBuffer);
+  //////////////////////////////////////////////////////////////////////////////////
+
+  drivePacketData.leftMotorPower = motorOutputValue.LeftPowerPercentage;
+  drivePacketData.rightMotorPower = motorOutputValue.RightPowerPercentage;
+
+
+  // use this variable to keep track of how many
+  // bytes we're stuffing in the transmit buffer
+  uint16_t sendSize = 0;
+
+  ///////////////////////////////////////// Stuff buffer with struct
+  sendSize = myTransfer.txObj(testStruct, sendSize);
+
+  ///////////////////////////////////////// Send buffer
+  myTransfer.sendData(sendSize);
+
+  //////////////////////////////////////////////////////////////////////////////////
+
+
+  // drivePacket = DrivePacket::Deserialize(packetBuffer);
   
   motorController.WritePowerToMotorAsPercentage(motorOutputValue.LeftPowerPercentage, motorOutputValue.RightPowerPercentage);
 
@@ -99,6 +134,6 @@ void loop()
   oledScreenLeftBottom.WriteInt(drivePacket.Data.leftMotorPower);
   oledScreenRightBottom.WriteInt(drivePacket.Data.rightMotorPower);
 
-  Serial.println("finished loop... waiting...");
+  Serial.println("(dashboard) finished loop... waiting...");
   delay(100);
 }

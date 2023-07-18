@@ -13,6 +13,12 @@
 #define LEFT_MOTOR_REVERSE_RELAY 6
 #define RIGHT_MOTOR_REVERSE_RELAY 7
 
+SerialTransfer myTransfer;
+
+MyTestStruct testStruct;
+
+DrivePacketData drivePacketData;
+
 DualMotorController motorController = DualMotorController(1, 0);
 
 SSD1306ScreenWriter oledScreenLeft = SSD1306ScreenWriter(7);
@@ -33,6 +39,9 @@ char *drivePacketBuffer = (char*)malloc(DRIVE_PACKET_SIZE);
 void setup() {
   Serial.begin(9600);
   Serial2.begin(9600);
+
+  myTransfer.begin(Serial2);
+
   Serial.print("Begin setup...");
 
   // Start I2C communication with the Multiplexer
@@ -63,13 +72,25 @@ void loop() {
   
   if (Serial2.available()) {
     biosScreen.WriteInt(2);
-    Serial2.setTimeout(1000);
-    Serial2.readBytes(drivePacketBuffer, DRIVE_PACKET_SIZE);
+    // Serial2.setTimeout(1000);
+    // Serial2.readBytes(drivePacketBuffer, DRIVE_PACKET_SIZE);
     
-    previousDrivePacket = drivePacket;
-    drivePacket = DrivePacket::Deserialize(String(drivePacketBuffer));
+    // previousDrivePacket = drivePacket;
+    // drivePacket = DrivePacket::Deserialize(String(drivePacketBuffer));
+    // Serial.println(String(drivePacketBuffer));
 
-    Serial.println(String(drivePacketBuffer));
+    // use this variable to keep track of how many
+    // bytes we've processed from the receive buffer
+    uint16_t recSize = 0;
+
+    recSize = myTransfer.rxObj(testStruct, recSize);
+    Serial.println(testStruct.z);
+    Serial.println(testStruct.y);
+
+    Serial.println(recSize);
+    biosScreen.WriteInt(3);
+
+    drivePacket.Data = drivePacketData;
 
     if(drivePacket.Data.leftMotorPower >= 20) digitalWrite(LED_BUILTIN, HIGH);  // switch LED On
     if(drivePacket.Data.leftMotorPower < 20) digitalWrite(LED_BUILTIN, LOW);   // switch LED Off
@@ -110,4 +131,6 @@ void loop() {
 
   oledScreenLeft.WriteInt(drivePacket.Data.leftMotorPower);
   oledScreenRight.WriteInt(drivePacket.Data.rightMotorPower);
+
+  delay(100);
 }

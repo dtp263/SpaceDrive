@@ -3,15 +3,20 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <SerialTransfer.h>
 
 #define DRIVE_PACKET_SIZE 56
 
 #define DELIMETER ","
 
-struct DrivePacketData
-{
+struct __attribute__((packed)) DrivePacketData {
     int leftMotorPower;
     int rightMotorPower;
+};
+
+struct __attribute__((packed)) MyTestStruct {
+  char z;
+  float y;
 };
 
 class DrivePacket
