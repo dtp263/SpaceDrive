@@ -22,7 +22,7 @@ public:
         
     }
 
-    DualMotorOutputValue ConvertToDualMotorOutput(RelativeJoystickPosition joystickPosition) {
+    DualMotorOutputValue ConvertToDualMotorOutput(RelativeJoystickPosition joystickPosition, int selectedDirection) {
         int forwardPower = ConvertToScale(joystickPosition.GetScale(), 100, joystickPosition.Y);
         DualMotorOutputValue tmpOutputValue = DualMotorOutputValue{
             LeftPowerPercentage: forwardPower,
@@ -35,6 +35,11 @@ public:
             tmpOutputValue.LeftPowerPercentage = tmpOutputValue.LeftPowerPercentage - (tmpOutputValue.LeftPowerPercentage * (leftRightAdjuster * -1));
         } else {
             tmpOutputValue.RightPowerPercentage = tmpOutputValue.RightPowerPercentage -  tmpOutputValue.RightPowerPercentage * (leftRightAdjuster);
+        }
+
+        if (selectedDirection == -1) {
+            tmpOutputValue.LeftPowerPercentage = tmpOutputValue.LeftPowerPercentage * -1;
+            tmpOutputValue.RightPowerPercentage = tmpOutputValue.RightPowerPercentage * -1;
         }
 
         return tmpOutputValue;

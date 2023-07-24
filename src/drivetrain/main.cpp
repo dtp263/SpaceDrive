@@ -10,6 +10,8 @@
 
 // #define RS_485_PIN 2
 
+boolean DEBUG_MODE = false;
+
 #define LEFT_MOTOR_REVERSE_RELAY 6
 #define RIGHT_MOTOR_REVERSE_RELAY 7
 
@@ -23,10 +25,7 @@ SSD1306ScreenWriter biosScreen = SSD1306ScreenWriter(2);
 int relayPins[8] = {3,4,5,6,9,10,11,12};
 EightChannelRelayBoard relayBoard = EightChannelRelayBoard(relayPins);
 
-bool isChangingDirectionLeft;
-bool isChangingDirectionRight;
-
-DrivePacket previousDrivePacket;
+bool success;
 DrivePacket drivePacket;
 char *drivePacketBuffer = (char*)malloc(DRIVE_PACKET_SIZE);
 
@@ -51,9 +50,6 @@ void setup() {
   // pinMode(RS_485_PIN, OUTPUT);
   // digitalWrite(RS_485_PIN, LOW);
 
-  previousDrivePacket.Data.leftMotorPower = 0;
-  previousDrivePacket.Data.rightMotorPower = 0;
-
   relayBoard.Setup();
 }
 
@@ -64,50 +60,55 @@ void loop() {
   if (Serial2.available()) {
     biosScreen.WriteInt(2);
     Serial2.setTimeout(1000);
+    char inChar = Serial2.read();
+    int attempts = 0;
+    while (inChar != *START_DELIMETER || attempts < DRIVE_PACKET_SIZE)
+    {
+      inChar = Serial2.read();
+      attempts++;
+    }
+
     Serial2.readBytes(drivePacketBuffer, DRIVE_PACKET_SIZE);
     
-    previousDrivePacket = drivePacket;
-    drivePacket = DrivePacket::Deserialize(String(drivePacketBuffer));
+    success = DrivePacket::Deserialize(String(drivePacketBuffer), &drivePacket);
 
-    Serial.println(String(drivePacketBuffer));
+    if (!success) {
+      biosScreen.WriteInt(3);
+      Serial.println("Failed to deserialize packet");
+      delay(1000);
+      return;
+    }
 
+    if (drivePacket.Data.direction == 0 || drivePacket.Data.direction == 1) {
+      relayBoard.SetRelayOff(LEFT_MOTOR_REVERSE_RELAY);
+      relayBoard.SetRelayOff(RIGHT_MOTOR_REVERSE_RELAY); 
+    } else {
+      relayBoard.SetRelayOn(LEFT_MOTOR_REVERSE_RELAY);
+      relayBoard.SetRelayOn(RIGHT_MOTOR_REVERSE_RELAY);
+    }
+    
     if(drivePacket.Data.leftMotorPower >= 20) digitalWrite(LED_BUILTIN, HIGH);  // switch LED On
     if(drivePacket.Data.leftMotorPower < 20) digitalWrite(LED_BUILTIN, LOW);   // switch LED Off
-    
-    if (drivePacket.Data.leftMotorPower < 0)  {
-      isChangingDirectionLeft = true;
-      relayBoard.SetRelayOn(LEFT_MOTOR_REVERSE_RELAY);
-      drivePacket.Data.leftMotorPower *= -1;
-    } else {
-      isChangingDirectionLeft = false;
-      relayBoard.SetRelayOff(LEFT_MOTOR_REVERSE_RELAY); // switch left reverse switch off
+
+    if (DEBUG_MODE) {
+      Serial.print(drivePacket.Data.direction);
+      Serial.print(",");
+      Serial.print(drivePacket.Data.leftMotorPower);
+      Serial.print(",");
+      Serial.print(drivePacket.Data.rightMotorPower);
+      Serial.print("\n");
+
+      motorController.WritePowerToMotorAsPercentage(
+        drivePacket.Data.leftMotorPower,
+        drivePacket.Data.rightMotorPower
+      );
     }
-
-    if(drivePacket.Data.rightMotorPower < 0) {
-      isChangingDirectionRight = true;
-      relayBoard.SetRelayOn(RIGHT_MOTOR_REVERSE_RELAY); // switch right reverse switch on
-      drivePacket.Data.rightMotorPower *= -1;
-    } else {
-      isChangingDirectionRight = false;
-      relayBoard.SetRelayOff(RIGHT_MOTOR_REVERSE_RELAY); // switch right reverse switch off
-    }
-
-    // if (isChangingDirectionRight || isChangingDirectionLeft) {
-    //   motorController.WritePowerToMotorAsPercentage(0,0);
-    //   delay(200);
-    // }
-
-    Serial.print(drivePacket.Data.leftMotorPower);
-    Serial.print(",");
-    Serial.print(drivePacket.Data.rightMotorPower);
-    Serial.print("\n");
-
-    motorController.WritePowerToMotorAsPercentage(
-      drivePacket.Data.leftMotorPower,
-      drivePacket.Data.rightMotorPower
-    );
   }
 
   oledScreenLeft.WriteInt(drivePacket.Data.leftMotorPower);
   oledScreenRight.WriteInt(drivePacket.Data.rightMotorPower);
+
+  if (DEBUG_MODE) {
+    delay(100);
+  }
 }
