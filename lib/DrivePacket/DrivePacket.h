@@ -4,12 +4,17 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 
-#define DRIVE_PACKET_SIZE 24
+#define DRIVE_PACKET_SIZE sizeof(struct DrivePacketData) + 16
+
+const char *START_DELIMETER = "X";
+const char *DELIMETER = ",";
+const char *END_DELIMETER = "$";
 
 struct DrivePacketData
 {
     int leftMotorPower;
     int rightMotorPower;
+    int direction;
 };
 
 class DrivePacket
@@ -24,41 +29,52 @@ public:
         DrivePacket(0, 0);
     }
 
-    DrivePacket(int leftPower, int rightPower)
+    DrivePacket(int leftPower, int rightPower, char direction = 0)
     {
         Data.leftMotorPower = leftPower;
         Data.rightMotorPower = rightPower;
+        Data.direction = direction;
     }
-
+    
     static String Serialize(DrivePacket *in)
     {
         char buffer[DRIVE_PACKET_SIZE];
         
         sprintf(
             buffer,
-            "%d,%d", 
+            "%s%s%d%s%d%s%d%s%s", 
+            START_DELIMETER,
+            DELIMETER,
+            in->Data.direction,
+            DELIMETER,
             in->Data.leftMotorPower, 
-            in->Data.rightMotorPower
+            DELIMETER,
+            in->Data.rightMotorPower,
+            DELIMETER,
+            END_DELIMETER
         );
 
         return String(buffer);
     }
 
-    static DrivePacket Deserialize(String in)
+    // deserialize a char pointer into two ints delineated by a comma and return a DrivePacket
+    static bool Deserialize(String in, DrivePacket *out)
     {
-        DrivePacket tmp;
-        char *delimeter = ",";
-
-        int index = 0;
+        int index = 1;
         int nextIndex;
-        nextIndex = in.indexOf(delimeter,index);
-        tmp.Data.leftMotorPower = in.substring(index, nextIndex).toInt();
+
+        nextIndex = in.indexOf(DELIMETER,index);
+        out->Data.direction = in.substring(index, nextIndex).toInt();
 
         index = nextIndex+1;
-        nextIndex = in.indexOf(delimeter,index);
-        tmp.Data.rightMotorPower = in.substring(index, nextIndex).toInt();
+        nextIndex = in.indexOf(DELIMETER,index);
+        out->Data.leftMotorPower = in.substring(index, nextIndex).toInt();
 
-        return tmp;
+        index = nextIndex+1;
+        nextIndex = in.indexOf(DELIMETER,index);
+        out->Data.rightMotorPower = in.substring(index, nextIndex).toInt();
+
+        return true;
     }
 };
 

@@ -13,9 +13,14 @@
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 
+#define FWD_DRIVE_SWITCH_PIN 2
+#define REV_DRIVE_SWITCH_PIN 3
+
 #define RS_485_PIN 8
 
 #define JOYSTICK_POSITION_COUNT 1024
+
+boolean DEBUG_MODE = true;
 
 SSD1306ScreenWriter oledScreenLeft = SSD1306ScreenWriter(1);
 SSD1306ScreenWriter oledScreenRight = SSD1306ScreenWriter(0);
@@ -23,7 +28,6 @@ SSD1306ScreenWriter oledScreenLeftBottom = SSD1306ScreenWriter(2);
 SSD1306ScreenWriter oledScreenRightBottom = SSD1306ScreenWriter(3);
 
 LCDScreenWriter lcdScreenWriter = LCDScreenWriter(4);
-
 
 RelativeJoystickPosition currentJoystickPosition = RelativeJoystickPosition(0, 0, JOYSTICK_POSITION_COUNT);
 JoystickReader joystickReader = JoystickReader();
@@ -37,8 +41,6 @@ DualMotorOutputValue motorOutputValue = DualMotorOutputValue{
 };
 
 DrivePacket drivePacket;
-DrivePacket *testDrivePacket;
-
 
 char* drivePacketBuffer = (char*)malloc(DRIVE_PACKET_SIZE);
 
@@ -50,6 +52,9 @@ void setup()
   Serial.begin(9600);
   Serial1.begin(9600);
 
+  pinMode(FWD_DRIVE_SWITCH_PIN, INPUT);
+  pinMode(REV_DRIVE_SWITCH_PIN, INPUT);
+
   // Start I2C communication with the Multiplexer
   Wire.begin();
 
@@ -60,7 +65,7 @@ void setup()
   oledScreenLeftBottom.Setup();
   oledScreenRightBottom.Setup();
 
-  // lcdScreenWriter.Setup();
+  lcdScreenWriter.Setup();
   delay(10);
   pinMode(RS_485_PIN, OUTPUT);
   digitalWrite(RS_485_PIN, HIGH);
@@ -68,19 +73,30 @@ void setup()
 
 void loop()
 {
+  drivePacket.Data.direction = 0;
+  if (digitalRead(FWD_DRIVE_SWITCH_PIN) == HIGH)
+  {
+    drivePacket.Data.direction = 1;
+  }
+  else if (digitalRead(REV_DRIVE_SWITCH_PIN) == HIGH)
+  {
+    drivePacket.Data.direction = -1;
+  }
+
   currentJoystickPosition = joystickReader.ReadRelativePosition();
+  motorOutputValue = outputConverter.ConvertToDualMotorOutput(currentJoystickPosition, drivePacket.Data.direction);
 
-  motorOutputValue = outputConverter.ConvertToDualMotorOutput(currentJoystickPosition);
-
-  
   drivePacket.Data.leftMotorPower = motorOutputValue.LeftPowerPercentage;
   drivePacket.Data.rightMotorPower = motorOutputValue.RightPowerPercentage;
-  packetBuffer = DrivePacket::Serialize(&drivePacket);
-  packetBuffer.toCharArray(drivePacketBuffer, DRIVE_PACKET_SIZE, 0);
-  Serial1.write(drivePacketBuffer, DRIVE_PACKET_SIZE);
-  Serial.println(packetBuffer);
 
-  drivePacket = DrivePacket::Deserialize(packetBuffer);
+  packetBuffer = DrivePacket::Serialize(&drivePacket);
+  packetBuffer.toCharArray(drivePacketBuffer, DRIVE_PACKET_SIZE);
+  Serial1.write(drivePacketBuffer, DRIVE_PACKET_SIZE);
+
+  if (DEBUG_MODE == true) {
+    Serial.println("drivePacketBuffer: ");
+    Serial.println(packetBuffer);
+  }
   
   motorController.WritePowerToMotorAsPercentage(motorOutputValue.LeftPowerPercentage, motorOutputValue.RightPowerPercentage);
 
@@ -100,6 +116,10 @@ void loop()
   oledScreenLeftBottom.WriteInt(drivePacket.Data.leftMotorPower);
   oledScreenRightBottom.WriteInt(drivePacket.Data.rightMotorPower);
 
-  Serial.println("finished loop... waiting...");
-  // delay(1000);
+  if (DEBUG_MODE == true) {
+    Serial.println(digitalRead(FWD_DRIVE_SWITCH_PIN));
+    Serial.println(digitalRead(REV_DRIVE_SWITCH_PIN));
+    Serial.println("finished loop... waiting... ");
+    delay(100);
+  }
 }
