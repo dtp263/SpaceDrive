@@ -20,7 +20,7 @@
 
 #define JOYSTICK_POSITION_COUNT 1024
 
-boolean DEBUG_MODE = false;
+boolean DEBUG_MODE = true;
 
 SSD1306ScreenWriter oledScreenLeft = SSD1306ScreenWriter(1);
 SSD1306ScreenWriter oledScreenRight = SSD1306ScreenWriter(0);

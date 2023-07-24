@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 
-#define DRIVE_PACKET_SIZE sizeof(struct DrivePacketData) + 4
+#define DRIVE_PACKET_SIZE sizeof(struct DrivePacketData) + 16
 
 const char *START_DELIMETER = "X";
 const char *DELIMETER = ",";

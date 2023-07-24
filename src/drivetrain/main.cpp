@@ -36,7 +36,6 @@ void setup() {
 
   // Start I2C communication with the Multiplexer
   Wire.begin();
-
   motorController.Setup();
   oledScreenLeft.Setup();
   oledScreenRight.Setup();
@@ -90,6 +89,11 @@ void loop() {
     if(drivePacket.Data.leftMotorPower >= 20) digitalWrite(LED_BUILTIN, HIGH);  // switch LED On
     if(drivePacket.Data.leftMotorPower < 20) digitalWrite(LED_BUILTIN, LOW);   // switch LED Off
 
+    motorController.WritePowerToMotorAsPercentage(
+      drivePacket.Data.leftMotorPower,
+      drivePacket.Data.rightMotorPower
+    );
+
     if (DEBUG_MODE) {
       Serial.print(drivePacket.Data.direction);
       Serial.print(",");
@@ -97,11 +101,6 @@ void loop() {
       Serial.print(",");
       Serial.print(drivePacket.Data.rightMotorPower);
       Serial.print("\n");
-
-      motorController.WritePowerToMotorAsPercentage(
-        drivePacket.Data.leftMotorPower,
-        drivePacket.Data.rightMotorPower
-      );
     }
   }
 
