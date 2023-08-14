@@ -57,7 +57,7 @@ public:
         return String(buffer);
     }
 
-    // deserialize a string into the DrivePacket values.
+    // deserialize a char pointer into two ints delineated by a comma and return a DrivePacket
     static bool Deserialize(String in, DrivePacket *out)
     {
         int index = 1;
