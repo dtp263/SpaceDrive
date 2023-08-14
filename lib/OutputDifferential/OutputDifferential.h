@@ -14,12 +14,17 @@ struct DualMotorOutputValue {
 class OutputDifferential
 {
 private:
+    float throttleMultiplier = 1.0;
   
 public:
 
     void Setup()
     {
         
+    }
+
+    void SetThrottleMultiplier(int throttlePercentage) {
+        throttleMultiplier = throttlePercentage / (float)100;
     }
 
     DualMotorOutputValue ConvertToDualMotorOutput(RelativeJoystickPosition joystickPosition, int selectedDirection) {
@@ -41,6 +46,9 @@ public:
             tmpOutputValue.LeftPowerPercentage = tmpOutputValue.LeftPowerPercentage * -1;
             tmpOutputValue.RightPowerPercentage = tmpOutputValue.RightPowerPercentage * -1;
         }
+
+        tmpOutputValue.LeftPowerPercentage = static_cast<float>(tmpOutputValue.LeftPowerPercentage) * throttleMultiplier;
+        tmpOutputValue.RightPowerPercentage = static_cast<float>(tmpOutputValue.RightPowerPercentage) * throttleMultiplier;
 
         return tmpOutputValue;
     }

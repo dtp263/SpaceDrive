@@ -61,7 +61,7 @@ void loop() {
     Serial2.setTimeout(1000);
     char inChar = Serial2.read();
     int attempts = 0;
-    while (inChar != *START_DELIMETER || attempts < DRIVE_PACKET_SIZE)
+    while (inChar != *START_DELIMITER || attempts < DRIVE_PACKET_SIZE)
     {
       inChar = Serial2.read();
       attempts++;

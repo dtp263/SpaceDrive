@@ -4,6 +4,7 @@
 #include <OutputDifferential.h>
 #include <DualMotorController.h>
 #include <DrivePacket.h>
+#include <Potentiometer.h>
 #include <SPI.h>
 #include <SSD1306ScreenWriter.h>
 #include <Wire.h>
@@ -16,21 +17,26 @@
 #define FWD_DRIVE_SWITCH_PIN 2
 #define REV_DRIVE_SWITCH_PIN 3
 
+#define TUNING_KNOB_PIN 7
+
 #define RS_485_PIN 8
 
 #define JOYSTICK_POSITION_COUNT 1024
 
-boolean DEBUG_MODE = true;
+boolean DEBUG_MODE = false;
+boolean ENABLE_OLED_SCREENS = false;
 
-SSD1306ScreenWriter oledScreenLeft = SSD1306ScreenWriter(1);
-SSD1306ScreenWriter oledScreenRight = SSD1306ScreenWriter(0);
+SSD1306ScreenWriter oledScreenLeft = SSD1306ScreenWriter(6);
+SSD1306ScreenWriter oledScreenRight = SSD1306ScreenWriter(7);
 SSD1306ScreenWriter oledScreenLeftBottom = SSD1306ScreenWriter(2);
 SSD1306ScreenWriter oledScreenRightBottom = SSD1306ScreenWriter(3);
 
-LCDScreenWriter lcdScreenWriter = LCDScreenWriter(4);
+LCDScreenWriter lcdScreenWriter = LCDScreenWriter(0);
 
 RelativeJoystickPosition currentJoystickPosition = RelativeJoystickPosition(0, 0, JOYSTICK_POSITION_COUNT);
 JoystickReader joystickReader = JoystickReader();
+
+Potentiometer tuningKnob = Potentiometer(7);
 
 OutputDifferential outputConverter = OutputDifferential();
 
@@ -54,6 +60,8 @@ void setup()
 
   pinMode(FWD_DRIVE_SWITCH_PIN, INPUT);
   pinMode(REV_DRIVE_SWITCH_PIN, INPUT);
+
+  tuningKnob.Setup();
 
   // Start I2C communication with the Multiplexer
   Wire.begin();
@@ -83,6 +91,10 @@ void loop()
     drivePacket.Data.direction = -1;
   }
 
+  int tuningNumber = tuningKnob.ReadPercentage();
+
+  outputConverter.SetThrottleMultiplier(tuningNumber);
+
   currentJoystickPosition = joystickReader.ReadRelativePosition();
   motorOutputValue = outputConverter.ConvertToDualMotorOutput(currentJoystickPosition, drivePacket.Data.direction);
 
@@ -94,6 +106,8 @@ void loop()
   Serial1.write(drivePacketBuffer, DRIVE_PACKET_SIZE);
 
   if (DEBUG_MODE == true) {
+    Serial.println("Tuning number: ");
+    Serial.println(tuningNumber);
     Serial.println("drivePacketBuffer: ");
     Serial.println(packetBuffer);
   }
@@ -120,6 +134,6 @@ void loop()
     Serial.println(digitalRead(FWD_DRIVE_SWITCH_PIN));
     Serial.println(digitalRead(REV_DRIVE_SWITCH_PIN));
     Serial.println("finished loop... waiting... ");
-    delay(100);
+    delay(1000);
   }
 }

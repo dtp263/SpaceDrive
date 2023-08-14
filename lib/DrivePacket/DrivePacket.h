@@ -6,9 +6,9 @@
 
 #define DRIVE_PACKET_SIZE sizeof(struct DrivePacketData) + 16
 
-const char *START_DELIMETER = "X";
-const char *DELIMETER = ",";
-const char *END_DELIMETER = "$";
+const char *START_DELIMITER = "X";
+const char *DELIMITER = ",";
+const char *END_DELIMITER = "$";
 
 struct DrivePacketData
 {
@@ -43,15 +43,15 @@ public:
         sprintf(
             buffer,
             "%s%s%d%s%d%s%d%s%s", 
-            START_DELIMETER,
-            DELIMETER,
+            START_DELIMITER,
+            DELIMITER,
             in->Data.direction,
-            DELIMETER,
+            DELIMITER,
             in->Data.leftMotorPower, 
-            DELIMETER,
+            DELIMITER,
             in->Data.rightMotorPower,
-            DELIMETER,
-            END_DELIMETER
+            DELIMITER,
+            END_DELIMITER
         );
 
         return String(buffer);
@@ -63,15 +63,15 @@ public:
         int index = 1;
         int nextIndex;
 
-        nextIndex = in.indexOf(DELIMETER,index);
+        nextIndex = in.indexOf(DELIMITER,index);
         out->Data.direction = in.substring(index, nextIndex).toInt();
 
         index = nextIndex+1;
-        nextIndex = in.indexOf(DELIMETER,index);
+        nextIndex = in.indexOf(DELIMITER,index);
         out->Data.leftMotorPower = in.substring(index, nextIndex).toInt();
 
         index = nextIndex+1;
-        nextIndex = in.indexOf(DELIMETER,index);
+        nextIndex = in.indexOf(DELIMITER,index);
         out->Data.rightMotorPower = in.substring(index, nextIndex).toInt();
 
         return true;
