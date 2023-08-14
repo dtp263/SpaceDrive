@@ -11,7 +11,7 @@ private:
     uint8_t potPinX = A1;
     uint8_t potPinY = A0;
 
-    bool invertX = true;
+    bool invertX = false;
     bool invertY = true;
 
     int InvertPosition(int position) {

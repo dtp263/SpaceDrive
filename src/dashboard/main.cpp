@@ -24,13 +24,14 @@
 #define JOYSTICK_POSITION_COUNT 1024
 
 boolean DEBUG_MODE = false;
+boolean ENABLE_OLED_SCREENS = false;
 
-SSD1306ScreenWriter oledScreenLeft = SSD1306ScreenWriter(1);
-SSD1306ScreenWriter oledScreenRight = SSD1306ScreenWriter(0);
+SSD1306ScreenWriter oledScreenLeft = SSD1306ScreenWriter(6);
+SSD1306ScreenWriter oledScreenRight = SSD1306ScreenWriter(7);
 SSD1306ScreenWriter oledScreenLeftBottom = SSD1306ScreenWriter(2);
 SSD1306ScreenWriter oledScreenRightBottom = SSD1306ScreenWriter(3);
 
-LCDScreenWriter lcdScreenWriter = LCDScreenWriter(4);
+LCDScreenWriter lcdScreenWriter = LCDScreenWriter(0);
 
 RelativeJoystickPosition currentJoystickPosition = RelativeJoystickPosition(0, 0, JOYSTICK_POSITION_COUNT);
 JoystickReader joystickReader = JoystickReader();
@@ -91,9 +92,6 @@ void loop()
   }
 
   int tuningNumber = tuningKnob.ReadPercentage();
-  Serial.println("Tuning number: ");
-  Serial.println(tuningNumber);
-  // delay(500);
 
   outputConverter.SetThrottleMultiplier(tuningNumber);
 
@@ -108,6 +106,8 @@ void loop()
   Serial1.write(drivePacketBuffer, DRIVE_PACKET_SIZE);
 
   if (DEBUG_MODE == true) {
+    Serial.println("Tuning number: ");
+    Serial.println(tuningNumber);
     Serial.println("drivePacketBuffer: ");
     Serial.println(packetBuffer);
   }

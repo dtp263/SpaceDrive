@@ -107,7 +107,7 @@ public:
         PositionSeparatorSize = sizeof(sizeof(PositionOutputSeparator));
         while (lcd.begin(COLUMS, ROWS) != 1) // colums - 20, rows - 4
         {
-            Serial.println(F("PCF8574 is not connected or lcd pins declaration is wrong. Only pins numbers: 4,5,6,16,11,12,13,14 are legal."));
+            Serial.println(F("PCF8574 is not connected or lcd pins declaration is wrong."));
             delay(5000);
         }
 
