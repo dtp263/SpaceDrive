@@ -36,6 +36,16 @@ public:
 
         float leftRightAdjuster = float(joystickPosition.X) / float(joystickPosition.GetScale());
 
+        // Sigmoid function
+        leftRightAdjuster = 1 / (1 + exp(-leftRightAdjuster)) * 2 - 1;
+        leftRightAdjuster = leftRightAdjuster * 1.5;
+
+        // Tanh function
+        // leftRightAdjuster = tanh(leftRightAdjuster) * 2;
+
+        Serial.print("Left Right Adjuster: ");
+        Serial.println(leftRightAdjuster);
+
         if (leftRightAdjuster < 0) {
             tmpOutputValue.LeftPowerPercentage = tmpOutputValue.LeftPowerPercentage - (tmpOutputValue.LeftPowerPercentage * (leftRightAdjuster * -1));
         } else {

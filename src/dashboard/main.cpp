@@ -23,13 +23,13 @@
 
 #define JOYSTICK_POSITION_COUNT 1024
 
-boolean DEBUG_MODE = false;
+boolean DEBUG_MODE = true;
 boolean ENABLE_OLED_SCREENS = false;
 
-SSD1306ScreenWriter oledScreenLeft = SSD1306ScreenWriter(6);
-SSD1306ScreenWriter oledScreenRight = SSD1306ScreenWriter(7);
-SSD1306ScreenWriter oledScreenLeftBottom = SSD1306ScreenWriter(2);
-SSD1306ScreenWriter oledScreenRightBottom = SSD1306ScreenWriter(3);
+// SSD1306ScreenWriter oledScreenLeft = SSD1306ScreenWriter(6);
+// SSD1306ScreenWriter oledScreenRight = SSD1306ScreenWriter(7);
+// SSD1306ScreenWriter oledScreenLeftBottom = SSD1306ScreenWriter(2);
+// SSD1306ScreenWriter oledScreenRightBottom = SSD1306ScreenWriter(3);
 
 LCDScreenWriter lcdScreenWriter = LCDScreenWriter(0);
 
@@ -40,7 +40,7 @@ Potentiometer tuningKnob = Potentiometer(7);
 
 OutputDifferential outputConverter = OutputDifferential();
 
-DualMotorController motorController = DualMotorController(5, 6);
+// DualMotorController motorController = DualMotorController(5, 6);
 DualMotorOutputValue motorOutputValue = DualMotorOutputValue{
   LeftPowerPercentage: 0,
   RightPowerPercentage: 0
@@ -65,13 +65,6 @@ void setup()
 
   // Start I2C communication with the Multiplexer
   Wire.begin();
-
-  motorController.Setup();
-
-  oledScreenLeft.Setup();
-  oledScreenRight.Setup();
-  oledScreenLeftBottom.Setup();
-  oledScreenRightBottom.Setup();
 
   lcdScreenWriter.Setup();
   delay(10);
@@ -106,13 +99,11 @@ void loop()
   Serial1.write(drivePacketBuffer, DRIVE_PACKET_SIZE);
 
   if (DEBUG_MODE == true) {
-    Serial.println("Tuning number: ");
-    Serial.println(tuningNumber);
+    // Serial.println("Tuning number: ");
+    // Serial.println(tuningNumber);
     Serial.println("drivePacketBuffer: ");
     Serial.println(packetBuffer);
   }
-  
-  motorController.WritePowerToMotorAsPercentage(motorOutputValue.LeftPowerPercentage, motorOutputValue.RightPowerPercentage);
 
   // Do display work.
   lcdScreenWriter.CurrentPositionX = currentJoystickPosition.X;
@@ -122,18 +113,11 @@ void loop()
   lcdScreenWriter.CurrentPowerRight = motorOutputValue.RightPowerPercentage;
   lcdScreenWriter.Update();
 
-  MotorVoltages voltages = motorController.GetMotorVoltages();
-  oledScreenLeft.WriteFloat(voltages.Left);
-  oledScreenRight.WriteFloat(voltages.Right);
-
-  // MotorAnalogOutput analogOutputs = motorController.GetAnalogOutputs();
-  oledScreenLeftBottom.WriteInt(drivePacket.Data.leftMotorPower);
-  oledScreenRightBottom.WriteInt(drivePacket.Data.rightMotorPower);
-
   if (DEBUG_MODE == true) {
-    Serial.println(digitalRead(FWD_DRIVE_SWITCH_PIN));
-    Serial.println(digitalRead(REV_DRIVE_SWITCH_PIN));
+    // Serial.println(digitalRead(FWD_DRIVE_SWITCH_PIN));
+    // Serial.println(digitalRead(REV_DRIVE_SWITCH_PIN));
     Serial.println("finished loop... waiting... ");
+    Serial.println();
     delay(1000);
   }
 }
