@@ -20,7 +20,7 @@ public:
         throttleMultiplier = throttlePercentage / (float)100;
     }
 
-    float lerp(float start, float end, float accelChange, float deccelChange) {
+    float advancedLerp(float start, float end, float accelChange, float deccelChange) {
         float t;
         if (start < end) {
             t = accelChange;
@@ -28,6 +28,10 @@ public:
             t = deccelChange;
         }
 
+        return lerp(start, end, t);
+    }
+
+    float lerp(float start, float end, float t) {
         return (1 - t) * start + t * end;
     }
 
@@ -36,8 +40,8 @@ public:
         RelativeJoystickPosition currentJoystickPosition,
         int selectedDirection
     ) {
-        float lerpedForward = lerp(previousJoystickPosition.Y, currentJoystickPosition.Y, 0.5, 0.8);
-        float lerpedTurn = lerp(previousJoystickPosition.X, currentJoystickPosition.X, 0.5, 0.8);
+        float lerpedForward = advancedLerp(previousJoystickPosition.Y, currentJoystickPosition.Y, 0.5, 0.8);
+        float lerpedTurn = lerp(previousJoystickPosition.X, currentJoystickPosition.X, 0.5);
 
         DualMotorOutputValue tmpOutputValue = DualMotorOutputValue{
             LeftPowerPercentage: 0,
