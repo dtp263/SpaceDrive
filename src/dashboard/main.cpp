@@ -23,16 +23,11 @@
 
 #define JOYSTICK_POSITION_COUNT 1024
 
-boolean DEBUG_MODE = true;
-boolean ENABLE_OLED_SCREENS = false;
-
-// SSD1306ScreenWriter oledScreenLeft = SSD1306ScreenWriter(6);
-// SSD1306ScreenWriter oledScreenRight = SSD1306ScreenWriter(7);
-// SSD1306ScreenWriter oledScreenLeftBottom = SSD1306ScreenWriter(2);
-// SSD1306ScreenWriter oledScreenRightBottom = SSD1306ScreenWriter(3);
+boolean DEBUG_MODE = false;
 
 LCDScreenWriter lcdScreenWriter = LCDScreenWriter(0);
 
+RelativeJoystickPosition previousJoystickPosition = RelativeJoystickPosition(0, 0, JOYSTICK_POSITION_COUNT);
 RelativeJoystickPosition currentJoystickPosition = RelativeJoystickPosition(0, 0, JOYSTICK_POSITION_COUNT);
 JoystickReader joystickReader = JoystickReader();
 
@@ -40,7 +35,6 @@ Potentiometer tuningKnob = Potentiometer(7);
 
 OutputDifferential outputConverter = OutputDifferential();
 
-// DualMotorController motorController = DualMotorController(5, 6);
 DualMotorOutputValue motorOutputValue = DualMotorOutputValue{
   LeftPowerPercentage: 0,
   RightPowerPercentage: 0
@@ -89,7 +83,9 @@ void loop()
   outputConverter.SetThrottleMultiplier(tuningNumber);
 
   currentJoystickPosition = joystickReader.ReadRelativePosition();
-  motorOutputValue = outputConverter.ConvertToDualMotorOutput(currentJoystickPosition, drivePacket.Data.direction);
+  motorOutputValue = outputConverter.ConvertToDualMotorOutput(previousJoystickPosition, currentJoystickPosition, drivePacket.Data.direction);
+
+  previousJoystickPosition = currentJoystickPosition;
 
   drivePacket.Data.leftMotorPower = motorOutputValue.LeftPowerPercentage;
   drivePacket.Data.rightMotorPower = motorOutputValue.RightPowerPercentage;
@@ -97,13 +93,6 @@ void loop()
   packetBuffer = DrivePacket::Serialize(&drivePacket);
   packetBuffer.toCharArray(drivePacketBuffer, DRIVE_PACKET_SIZE);
   Serial1.write(drivePacketBuffer, DRIVE_PACKET_SIZE);
-
-  if (DEBUG_MODE == true) {
-    // Serial.println("Tuning number: ");
-    // Serial.println(tuningNumber);
-    Serial.println("drivePacketBuffer: ");
-    Serial.println(packetBuffer);
-  }
 
   // Do display work.
   lcdScreenWriter.CurrentPositionX = currentJoystickPosition.X;
@@ -114,8 +103,13 @@ void loop()
   lcdScreenWriter.Update();
 
   if (DEBUG_MODE == true) {
-    // Serial.println(digitalRead(FWD_DRIVE_SWITCH_PIN));
-    // Serial.println(digitalRead(REV_DRIVE_SWITCH_PIN));
+    Serial.println("Tuning number: ");
+    Serial.println(tuningNumber);
+    Serial.println("drivePacketBuffer: ");
+    Serial.println(packetBuffer);
+
+    Serial.println(digitalRead(FWD_DRIVE_SWITCH_PIN));
+    Serial.println(digitalRead(REV_DRIVE_SWITCH_PIN));
     Serial.println("finished loop... waiting... ");
     Serial.println();
     delay(1000);

@@ -10,55 +10,47 @@ struct DualMotorOutputValue {
     int RightPowerPercentage;
 };
 
-
 class OutputDifferential
 {
 private:
     float throttleMultiplier = 1.0;
   
 public:
-
-    void Setup()
-    {
-        
-    }
-
     void SetThrottleMultiplier(int throttlePercentage) {
         throttleMultiplier = throttlePercentage / (float)100;
     }
 
-    DualMotorOutputValue ConvertToDualMotorOutput(RelativeJoystickPosition joystickPosition, int selectedDirection) {
-        int forwardPower = ConvertToScale(joystickPosition.GetScale(), 100, joystickPosition.Y);
+    float lerp(float start, float end, float accelChange, float deccelChange) {
+        float t;
+        if (start < end) {
+            t = accelChange;
+        } else if (start > end) {
+            t = deccelChange;
+        }
+
+        return (1 - t) * start + t * end;
+    }
+
+    DualMotorOutputValue ConvertToDualMotorOutput(
+        RelativeJoystickPosition previousJoystickPosition,
+        RelativeJoystickPosition currentJoystickPosition,
+        int selectedDirection
+    ) {
+        float lerpedForward = lerp(previousJoystickPosition.Y, currentJoystickPosition.Y, 0.5, 0.8);
+        float lerpedTurn = lerp(previousJoystickPosition.X, currentJoystickPosition.X, 0.5, 0.8);
+
         DualMotorOutputValue tmpOutputValue = DualMotorOutputValue{
-            LeftPowerPercentage: forwardPower,
-            RightPowerPercentage: forwardPower,
+            LeftPowerPercentage: 0,
+            RightPowerPercentage: 0,
         };
 
-        float leftRightAdjuster = float(joystickPosition.X) / float(joystickPosition.GetScale());
+        float turnDamping = 5;
+        float forward = static_cast<float>(lerpedForward) / currentJoystickPosition.GetScale();
+        float turn = static_cast<float>(lerpedTurn) / currentJoystickPosition.GetScale();
 
-        // Sigmoid function
-        leftRightAdjuster = 1 / (1 + exp(-leftRightAdjuster)) * 2 - 1;
-        leftRightAdjuster = leftRightAdjuster * 1.5;
-
-        // Tanh function
-        // leftRightAdjuster = tanh(leftRightAdjuster) * 2;
-
-        Serial.print("Left Right Adjuster: ");
-        Serial.println(leftRightAdjuster);
-
-        if (leftRightAdjuster < 0) {
-            tmpOutputValue.LeftPowerPercentage = tmpOutputValue.LeftPowerPercentage - (tmpOutputValue.LeftPowerPercentage * (leftRightAdjuster * -1));
-        } else {
-            tmpOutputValue.RightPowerPercentage = tmpOutputValue.RightPowerPercentage -  tmpOutputValue.RightPowerPercentage * (leftRightAdjuster);
-        }
-
-        if (selectedDirection == -1) {
-            tmpOutputValue.LeftPowerPercentage = tmpOutputValue.LeftPowerPercentage * -1;
-            tmpOutputValue.RightPowerPercentage = tmpOutputValue.RightPowerPercentage * -1;
-        }
-
-        tmpOutputValue.LeftPowerPercentage = static_cast<float>(tmpOutputValue.LeftPowerPercentage) * throttleMultiplier;
-        tmpOutputValue.RightPowerPercentage = static_cast<float>(tmpOutputValue.RightPowerPercentage) * throttleMultiplier;
+        turn /= 1 + turnDamping * forward * forward;
+        tmpOutputValue.LeftPowerPercentage = (selectedDirection * (forward + turn) * throttleMultiplier) * 100;
+        tmpOutputValue.RightPowerPercentage = (selectedDirection * (forward - turn) * throttleMultiplier) * 100;
 
         return tmpOutputValue;
     }
